@@ -1,48 +1,13 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-
 #include "file_disemvowel.h"
-
-
-// char *disemvowel(char *str) {
-//   int non_vowels = 0;
-//   int length = strlen(str);
-//   for (int i=0; i<length; i++) {
-//     if (!is_vowel(str[i])) {
-//       non_vowels++;
-//     }
-//   }
-//   char *result = (char*) calloc(non_vowels+1, sizeof(char));
-//   int j = 0;
-//   for (int i=0; i<length; i++) {
-//     if (!is_vowel(str[i])) {
-//       if (result != NULL) {
-//         result[j] = str[i];
-//       }
-//       j++;
-//     }
-//   }
-//   if (result != NULL) {
-//     result[non_vowels] = '\0';
-//   }
-  
-//   return result;
-// }
-
-#include <stdio.h>
-#include <stdbool.h>
 
 #define BUF_SIZE 1024
 
 bool is_vowel(char vowel) {
-  return (
-    vowel == 'a' || vowel == 'A' ||
-    vowel == 'e' || vowel == 'E' ||
-    vowel == 'i' || vowel == 'I' ||
-    vowel == 'o' || vowel == 'O' ||
-    vowel == 'u' || vowel == 'U'
-  );
+  return (vowel == 'a' || vowel == 'A' || vowel == 'e' || vowel == 'E' || vowel == 'i' || vowel == 'I' || vowel == 'o' || vowel == 'O' || vowel == 'u' || vowel == 'U');
 }
 
 int copy_non_vowels(int num_chars, char* in_buf, char* out_buf) {
@@ -61,7 +26,7 @@ int copy_non_vowels(int num_chars, char* in_buf, char* out_buf) {
     }
   }
 
-    return j;
+  return j;
 }
 
 void disemvowel(FILE* inputFile, FILE* outputFile) {
@@ -76,15 +41,20 @@ void disemvowel(FILE* inputFile, FILE* outputFile) {
 
     // call fread()
     size_t num_chars; // temp  = fread(in_buff, sizeof(char), BUF_SIZE, inputFile);
-
     
-    while((num_chars = fread(in_buff, sizeof(char), BUF_SIZE, inputFile)) > 0 ){ // read in some lines of text, chack that something came in
+    while((num_chars = fread(in_buff, sizeof(char), BUF_SIZE, inputFile)) > 0 ){ // read in some lines of text, check that something came in
+      
+      // printf("read %ld units\n", num_chars);
+
       int num_consonants = copy_non_vowels(num_chars, in_buff, out_buff); // find num of consonants to copy over
       
       size_t written = 0; // keep track of consonants written
+
+      // printf("finished copying non-vowels, moving to nested for loop\n");
+
       while(written < num_consonants){ // write consonants out
-        fwrite(out_buff+written, sizeof(char), num_consonants - written, outputFile);
-        written++ ; // to out_buff or outputFile;
+        // printf("inside nested while loop\n");
+        written += fwrite(out_buff+written, sizeof(char), num_consonants - written, outputFile);
       }
     }
     
@@ -99,16 +69,32 @@ int main(int argc, char *argv[]) {
     FILE *inputFile = stdin;
     FILE *outputFile = stdout;
 
+    // printf("In main, set up default values\n");
+
     // Code that processes the command line arguments
     // and sets up inputFile and outputFile.
     if(argc >= 2){
-      inputFile = (FILE *) argv[2];
+      // inputFile = (FILE *) argv[2];
+      inputFile = fopen(argv[1], "r");
+      if (inputFile == NULL) {
+        printf("ERROR\n");
+        return 1;
+      }
+      // printf("set default value\n");
     }
-    if(argc >= 3){
-      outputFile = (FILE *) argv[3];
+      if(argc >= 3){
+      //outputFile = (FILE *) argv[3];
+      outputFile = fopen(argv[2], "w");
+      if (outputFile == NULL) {
+        printf("ERROR\n");
+        return 1;
+      }
     }
-    
+
     disemvowel(inputFile, outputFile);
+
+    fclose(outputFile);
+    fclose(inputFile);
 
     return 0;
 }
