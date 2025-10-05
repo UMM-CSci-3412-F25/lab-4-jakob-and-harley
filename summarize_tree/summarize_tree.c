@@ -16,6 +16,15 @@ bool is_dir(const char* path) {
    * return value from stat() in case there is a problem, e.g., maybe the
    * the file doesn't actually exist.
    */
+
+   struct stat buf;
+   int status = stat(path, &buf);
+   if (status == 0) {
+    return S_ISDIR(buf.st_mode);
+   } else {
+    perror("error in stat()");
+    return false;
+   }
 }
 
 /* 
@@ -36,13 +45,26 @@ void process_directory(const char* path) {
    * with a matching call to chdir() to move back out of it when you're
    * done.
    */
+
+   num_dirs++;
+   //printf("In process directory number of directorys %d", num_dirs);
+   chdir(path);
+   DIR *dir = opendir(".");
+   struct dirent *ent;
+   while ((ent = readdir(dir)) != NULL) {
+    if (strcmp(ent->d_name, "..") == 0 || strcmp(ent->d_name, ".") == 0) {
+      continue;
+    } else { 
+      process_path(ent->d_name);
+    }
+   };
+   closedir(dir);
+   chdir("..");
 }
 
 void process_file(const char* path) {
-  /*
-   * Update the number of regular files.
-   * This is as simple as it seems. :-)
-   */
+  num_regular++;
+  //printf("in process file number of files %d", num_regular);
 }
 
 void process_path(const char* path) {
@@ -55,6 +77,7 @@ void process_path(const char* path) {
 
 int main (int argc, char *argv[]) {
   // Ensure an argument was provided.
+  //printf("hello?");
   if (argc != 2) {
     printf ("Usage: %s <path>\n", argv[0]);
     printf ("       where <path> is the file or root of the tree you want to summarize.\n");
